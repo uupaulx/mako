@@ -162,7 +162,8 @@
     </div>
   </div>
 
-  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js?v=2"
+          onerror="document.getElementById('statusMsg').textContent='SDK โหลดไม่ได้ กรุณาปิดแล้วเปิดใหม่';document.getElementById('statusMsg').className='status error'"></script>
   <script>
     // === CONFIG ===
     const LIFF_ID = '2009540787-qDZLFlcY';  // TODO: ใส่ LIFF ID จาก LINE Developers Console
@@ -257,7 +258,20 @@
       }
     });
 
-    initLiff();
+    if (typeof liff !== 'undefined') {
+      initLiff();
+    } else {
+      document.getElementById('statusMsg').textContent = 'กำลังโหลด กรุณารอสักครู่...';
+      document.getElementById('statusMsg').className = 'status loading';
+      window.addEventListener('load', function() {
+        if (typeof liff !== 'undefined') {
+          initLiff();
+        } else {
+          document.getElementById('statusMsg').textContent = 'ไม่สามารถโหลด LINE SDK ได้ กรุณาปิดแล้วเปิดใหม่';
+          document.getElementById('statusMsg').className = 'status error';
+        }
+      });
+    }
   </script>
 </body>
 </html>
