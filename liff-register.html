@@ -194,8 +194,20 @@
         await liff.init({ liffId: LIFF_ID });
 
         if (!liff.isLoggedIn()) {
-          liff.login();
-          return;
+          // Only auto-login if in LINE app, otherwise show message
+          if (liff.isInClient()) {
+            liff.login();
+            return;
+          } else {
+            // External browser - try login once (check URL for liff.state to avoid loop)
+            if (!window.location.href.includes('liff.state')) {
+              liff.login();
+              return;
+            }
+            status.textContent = 'กรุณาเปิดลิงก์นี้จากแชทมาโกะใน LINE';
+            status.className = 'status error';
+            return;
+          }
         }
 
         lineProfile = await liff.getProfile();
