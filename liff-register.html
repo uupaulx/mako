@@ -159,9 +159,9 @@
     </div>
   </div>
 
-  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js?v=3"
-          onerror="document.getElementById('statusMsg').textContent='LINE SDK โหลดไม่ได้';document.getElementById('statusMsg').className='status error'"></script>
-  <script src="https://alcdn.msauth.net/browser/2.38.3/js/msal-browser.min.js"></script>
+  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js?v=4"></script>
+  <script src="https://alcdn.msauth.net/browser/2.38.3/js/msal-browser.min.js"
+          onerror="document.getElementById('statusMsg').textContent='Microsoft SDK โหลดไม่ได้ กรุณาปิดแล้วเปิดใหม่';document.getElementById('statusMsg').className='status error'"></script>
   <script>
     // === CONFIG ===
     const LIFF_ID = '2009540787-qDZLFlcY';
@@ -205,18 +205,34 @@
         document.getElementById('displayName').textContent = lineProfile.displayName;
         document.getElementById('profileSection').classList.remove('hidden');
 
-        // Enable MS login button
-        document.getElementById('msLoginBtn').disabled = false;
         status.textContent = '';
 
-        // Init MSAL
-        msalInstance = new msal.PublicClientApplication(msalConfig);
-        await msalInstance.initialize();
+        // Init MSAL (check if loaded)
+        if (typeof msal !== 'undefined') {
+          msalInstance = new msal.PublicClientApplication(msalConfig);
+          await msalInstance.initialize();
+          document.getElementById('msLoginBtn').disabled = false;
 
-        // Check if returning from redirect
-        const response = await msalInstance.handleRedirectPromise();
-        if (response && response.account) {
-          await handleMsLogin(response.account);
+          // Check if returning from redirect
+          const response = await msalInstance.handleRedirectPromise();
+          if (response && response.account) {
+            await handleMsLogin(response.account);
+          }
+        } else {
+          status.textContent = 'กำลังโหลด Microsoft SDK...';
+          status.className = 'status loading';
+          // Retry after a moment
+          setTimeout(async () => {
+            if (typeof msal !== 'undefined') {
+              msalInstance = new msal.PublicClientApplication(msalConfig);
+              await msalInstance.initialize();
+              document.getElementById('msLoginBtn').disabled = false;
+              status.textContent = '';
+            } else {
+              status.textContent = 'ไม่สามารถโหลด Microsoft SDK ได้ กรุณาปิดแล้วเปิดใหม่';
+              status.className = 'status error';
+            }
+          }, 3000);
         }
       } catch (err) {
         status.textContent = 'ไม่สามารถเชื่อมต่อ LINE ได้: ' + err.message;
@@ -227,28 +243,37 @@
     // === Microsoft Login ===
     document.getElementById('msLoginBtn').addEventListener('click', async () => {
       const status = document.getElementById('statusMsg');
-      try {
-        status.textContent = 'กำลังเปิดหน้า Microsoft Login...';
-        status.className = 'status loading';
 
-        // Use redirect (works better in LINE in-app browser)
-        await msalInstance.loginRedirect({
+      if (!msalInstance) {
+        status.textContent = 'Microsoft SDK ยังไม่พร้อม กรุณารอสักครู่';
+        status.className = 'status error';
+        return;
+      }
+
+      status.textContent = 'กำลังเปิดหน้า Microsoft Login...';
+      status.className = 'status loading';
+      document.getElementById('msLoginBtn').disabled = true;
+
+      try {
+        // Try popup first (more reliable in in-app browsers)
+        const response = await msalInstance.loginPopup({
           scopes: ['User.Read'],
           prompt: 'select_account'
         });
-      } catch (err) {
-        // Fallback to popup if redirect fails
+        if (response.account) {
+          await handleMsLogin(response.account);
+        }
+      } catch (popupErr) {
+        // Fallback to redirect
         try {
-          const response = await msalInstance.loginPopup({
+          await msalInstance.loginRedirect({
             scopes: ['User.Read'],
             prompt: 'select_account'
           });
-          if (response.account) {
-            await handleMsLogin(response.account);
-          }
-        } catch (popupErr) {
+        } catch (redirectErr) {
           status.textContent = 'ไม่สามารถเข้าสู่ระบบ Microsoft ได้: ' + popupErr.message;
           status.className = 'status error';
+          document.getElementById('msLoginBtn').disabled = false;
         }
       }
     });
