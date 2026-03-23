@@ -34,14 +34,8 @@
       border: 3px solid #667eea;
       margin-bottom: 8px;
     }
-    .profile h2 {
-      font-size: 18px;
-      color: #333;
-    }
-    .profile p {
-      font-size: 13px;
-      color: #999;
-    }
+    .profile h2 { font-size: 18px; color: #333; }
+    .profile p { font-size: 13px; color: #999; }
     h1 {
       text-align: center;
       font-size: 22px;
@@ -54,6 +48,33 @@
       color: #888;
       margin-bottom: 24px;
     }
+    .form-group {
+      margin-bottom: 16px;
+    }
+    .form-group label {
+      display: block;
+      font-size: 14px;
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 6px;
+    }
+    .form-group input {
+      width: 100%;
+      padding: 12px 16px;
+      border: 2px solid #e0e0e0;
+      border-radius: 12px;
+      font-size: 16px;
+      transition: border-color 0.2s;
+    }
+    .form-group input:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+    .form-group .hint {
+      font-size: 12px;
+      color: #999;
+      margin-top: 4px;
+    }
     .btn {
       width: 100%;
       padding: 14px;
@@ -64,21 +85,13 @@
       cursor: pointer;
       margin-top: 8px;
       transition: opacity 0.2s;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 10px;
     }
-    .btn:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-    }
-    .btn-ms {
-      background: #2f2f2f;
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn-primary {
+      background: linear-gradient(135deg, #667eea, #764ba2);
       color: #fff;
     }
-    .btn-ms:hover { background: #1a1a1a; }
-    .btn-ms svg { width: 20px; height: 20px; }
+    .btn-primary:hover { opacity: 0.9; }
     .status {
       text-align: center;
       margin-top: 16px;
@@ -93,41 +106,26 @@
       text-align: center;
       padding: 40px 20px;
     }
-    .success-screen .checkmark {
-      font-size: 64px;
-      margin-bottom: 16px;
-    }
-    .success-screen h2 {
-      color: #27ae60;
-      margin-bottom: 8px;
-    }
-    .success-screen p {
-      color: #666;
-      font-size: 14px;
-    }
-    .ms-account {
-      text-align: center;
-      margin: 16px 0;
+    .success-screen .checkmark { font-size: 64px; margin-bottom: 16px; }
+    .success-screen h2 { color: #27ae60; margin-bottom: 8px; }
+    .success-screen p { color: #666; font-size: 14px; }
+    .success-screen .emp-info {
+      margin-top: 16px;
       padding: 12px;
       background: #f0f4ff;
       border-radius: 12px;
-    }
-    .ms-account .email {
+      text-align: left;
       font-size: 14px;
-      color: #667eea;
-      font-weight: 600;
+      color: #555;
     }
-    .ms-account .name {
-      font-size: 13px;
-      color: #888;
-    }
+    .success-screen .emp-info strong { color: #333; }
   </style>
 </head>
 <body>
   <!-- Registration Form -->
   <div class="card" id="formCard">
     <h1>ลงทะเบียน มาโกะ</h1>
-    <p class="subtitle">เข้าสู่ระบบด้วยบัญชี Microsoft ของบริษัท</p>
+    <p class="subtitle">กรอก email บริษัทเพื่อเริ่มใช้งาน</p>
 
     <div class="profile hidden" id="profileSection">
       <img id="profilePic" src="" alt="profile">
@@ -135,17 +133,13 @@
       <p>LINE Account</p>
     </div>
 
-    <div class="hidden" id="msAccountSection">
-      <div class="ms-account">
-        <div class="name" id="msName"></div>
-        <div class="email" id="msEmail"></div>
-      </div>
+    <div class="form-group">
+      <label for="emailInput">Email บริษัท</label>
+      <input type="email" id="emailInput" placeholder="name@icpladda.com" autocomplete="email">
+      <div class="hint">ใช้ email ที่ลงทะเบียนในระบบบริษัท</div>
     </div>
 
-    <button class="btn btn-ms" id="msLoginBtn" disabled>
-      <svg viewBox="0 0 21 21" fill="none"><rect x="1" y="1" width="9" height="9" fill="#F25022"/><rect x="11" y="1" width="9" height="9" fill="#7FBA00"/><rect x="1" y="11" width="9" height="9" fill="#00A4EF"/><rect x="11" y="11" width="9" height="9" fill="#FFB900"/></svg>
-      เข้าสู่ระบบด้วย Microsoft
-    </button>
+    <button class="btn btn-primary" id="submitBtn" disabled>ลงทะเบียน</button>
 
     <div class="status" id="statusMsg"></div>
   </div>
@@ -156,33 +150,17 @@
       <div class="checkmark">&#10003;</div>
       <h2>ลงทะเบียนสำเร็จ!</h2>
       <p>คุณสามารถคุยกับมาโกะได้แล้ว<br>กลับไปที่แชทเลยนะ</p>
+      <div class="emp-info" id="empInfo"></div>
     </div>
   </div>
 
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js?v=4"></script>
-  <script src="https://alcdn.msauth.net/browser/2.32.2/js/msal-browser.min.js"
-          onerror="document.getElementById('statusMsg').textContent='Microsoft SDK โหลดไม่ได้ กรุณาปิดแล้วเปิดใหม่';document.getElementById('statusMsg').className='status error'"></script>
   <script>
     // === CONFIG ===
     const LIFF_ID = '2009540787-qDZLFlcY';
-    const MS_CLIENT_ID = '7e3f0ef4-f227-4ede-9e18-5e29b3c06d34';
     const WEBHOOK_URL = 'https://n8nv2.icpladda.com/webhook/mako-register';
 
     let lineProfile = null;
-    let msalInstance = null;
-
-    // === MSAL Config ===
-    const msalConfig = {
-      auth: {
-        clientId: MS_CLIENT_ID,
-        authority: 'https://login.microsoftonline.com/common',
-        redirectUri: window.location.origin + window.location.pathname
-      },
-      cache: {
-        cacheLocation: 'sessionStorage',
-        storeAuthStateInCookie: true
-      }
-    };
 
     // === Init LIFF ===
     async function initLiff() {
@@ -194,12 +172,10 @@
         await liff.init({ liffId: LIFF_ID });
 
         if (!liff.isLoggedIn()) {
-          // Only auto-login if in LINE app, otherwise show message
           if (liff.isInClient()) {
             liff.login();
             return;
           } else {
-            // External browser - try login once (check URL for liff.state to avoid loop)
             if (!window.location.href.includes('liff.state')) {
               liff.login();
               return;
@@ -217,93 +193,36 @@
         document.getElementById('displayName').textContent = lineProfile.displayName;
         document.getElementById('profileSection').classList.remove('hidden');
 
+        // Enable form
+        document.getElementById('submitBtn').disabled = false;
         status.textContent = '';
 
-        // Init MSAL (check if loaded)
-        if (typeof msal !== 'undefined') {
-          msalInstance = new msal.PublicClientApplication(msalConfig);
-          await msalInstance.initialize();
-          document.getElementById('msLoginBtn').disabled = false;
-
-          // Check if returning from redirect
-          const response = await msalInstance.handleRedirectPromise();
-          if (response && response.account) {
-            await handleMsLogin(response.account);
-          }
-        } else {
-          status.textContent = 'กำลังโหลด Microsoft SDK...';
-          status.className = 'status loading';
-          // Retry after a moment
-          setTimeout(async () => {
-            if (typeof msal !== 'undefined') {
-              msalInstance = new msal.PublicClientApplication(msalConfig);
-              await msalInstance.initialize();
-              document.getElementById('msLoginBtn').disabled = false;
-              status.textContent = '';
-            } else {
-              status.textContent = 'ไม่สามารถโหลด Microsoft SDK ได้ กรุณาปิดแล้วเปิดใหม่';
-              status.className = 'status error';
-            }
-          }, 3000);
-        }
       } catch (err) {
         status.textContent = 'ไม่สามารถเชื่อมต่อ LINE ได้: ' + err.message;
         status.className = 'status error';
       }
     }
 
-    // === Microsoft Login ===
-    document.getElementById('msLoginBtn').addEventListener('click', async () => {
+    // === Submit Registration ===
+    document.getElementById('submitBtn').addEventListener('click', async () => {
+      const email = document.getElementById('emailInput').value.trim().toLowerCase();
       const status = document.getElementById('statusMsg');
 
-      if (!msalInstance) {
-        status.textContent = 'Microsoft SDK ยังไม่พร้อม กรุณารอสักครู่';
+      if (!email) {
+        status.textContent = 'กรุณากรอก email';
         status.className = 'status error';
         return;
       }
 
-      status.textContent = 'กำลังเปิดหน้า Microsoft Login...';
-      status.className = 'status loading';
-      document.getElementById('msLoginBtn').disabled = true;
-
-      try {
-        // Try popup first (more reliable in in-app browsers)
-        const response = await msalInstance.loginPopup({
-          scopes: ['User.Read'],
-          prompt: 'select_account'
-        });
-        if (response.account) {
-          await handleMsLogin(response.account);
-        }
-      } catch (popupErr) {
-        // Fallback to redirect
-        try {
-          await msalInstance.loginRedirect({
-            scopes: ['User.Read'],
-            prompt: 'select_account'
-          });
-        } catch (redirectErr) {
-          status.textContent = 'ไม่สามารถเข้าสู่ระบบ Microsoft ได้: ' + popupErr.message;
-          status.className = 'status error';
-          document.getElementById('msLoginBtn').disabled = false;
-        }
+      if (!email.includes('@')) {
+        status.textContent = 'รูปแบบ email ไม่ถูกต้อง';
+        status.className = 'status error';
+        return;
       }
-    });
 
-    // === Handle MS Login Success ===
-    async function handleMsLogin(account) {
-      const status = document.getElementById('statusMsg');
-      const msEmail = account.username;
-      const msName = account.name || msEmail;
-
-      // Show MS account info
-      document.getElementById('msName').textContent = msName;
-      document.getElementById('msEmail').textContent = msEmail;
-      document.getElementById('msAccountSection').classList.remove('hidden');
-      document.getElementById('msLoginBtn').classList.add('hidden');
-
-      status.textContent = 'กำลังลงทะเบียน...';
+      status.textContent = 'กำลังตรวจสอบ...';
       status.className = 'status loading';
+      document.getElementById('submitBtn').disabled = true;
 
       try {
         const res = await fetch(WEBHOOK_URL, {
@@ -313,8 +232,8 @@
             userId: lineProfile.userId,
             displayName: lineProfile.displayName,
             pictureUrl: lineProfile.pictureUrl || '',
-            msEmail: msEmail,
-            msName: msName
+            msEmail: email,
+            msName: lineProfile.displayName
           })
         });
 
@@ -323,22 +242,35 @@
         if (data.success) {
           document.getElementById('formCard').classList.add('hidden');
           document.getElementById('successCard').classList.remove('hidden');
+
+          // Show employee info if available
+          if (data.employee) {
+            const info = document.getElementById('empInfo');
+            info.innerHTML = '<strong>' + (data.employee.name || '') + '</strong><br>' +
+              (data.employee.department || '') + ' - ' + (data.employee.position || '');
+          }
+
           setTimeout(() => {
             if (liff.isInClient()) {
               liff.closeWindow();
             }
-          }, 2000);
+          }, 3000);
         } else {
           status.textContent = data.message || 'เกิดข้อผิดพลาด กรุณาลองใหม่';
           status.className = 'status error';
-          document.getElementById('msLoginBtn').classList.remove('hidden');
+          document.getElementById('submitBtn').disabled = false;
         }
       } catch (err) {
         status.textContent = 'เกิดข้อผิดพลาด: ' + err.message;
         status.className = 'status error';
-        document.getElementById('msLoginBtn').classList.remove('hidden');
+        document.getElementById('submitBtn').disabled = false;
       }
-    }
+    });
+
+    // Allow Enter key to submit
+    document.getElementById('emailInput').addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') document.getElementById('submitBtn').click();
+    });
 
     // === Start ===
     if (typeof liff !== 'undefined') {
@@ -346,10 +278,9 @@
     } else {
       document.getElementById('statusMsg').textContent = 'กำลังโหลด...';
       document.getElementById('statusMsg').className = 'status loading';
-      window.addEventListener('load', function() {
-        if (typeof liff !== 'undefined') {
-          initLiff();
-        } else {
+      window.addEventListener('load', () => {
+        if (typeof liff !== 'undefined') initLiff();
+        else {
           document.getElementById('statusMsg').textContent = 'ไม่สามารถโหลด LINE SDK ได้';
           document.getElementById('statusMsg').className = 'status error';
         }
